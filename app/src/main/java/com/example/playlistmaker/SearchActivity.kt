@@ -1,0 +1,20 @@
+package com.example.myapplication1
+
+import android.os.Bundle
+import android.widget.ImageView
+import androidx.appcompat.app.AppCompatActivity
+import com.example.playlistmaker.R
+
+class SearchActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        setContentView(R.layout.activity_search)
+
+        val back = findViewById<ImageView>(R.id.back_button)
+
+        back.setOnClickListener {
+            finish()
+        }
+    }
+}
