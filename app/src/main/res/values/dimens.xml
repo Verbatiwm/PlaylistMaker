@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="text_button">22sp</dimen>
+    <dimen name="icon_padding">8dp</dimen>
+    <dimen name="corner_radius">16dp</dimen>
+    <dimen name="padding_screen_24">24dp</dimen>
+    <dimen name="padding_screen_16">16dp</dimen>
+    <dimen name="padding_screen_32">32dp</dimen>
+    <dimen name="margin_24">24dp</dimen>
+    <dimen name="header_height">48dp</dimen>
+    <dimen name="icon_container">24dp</dimen>
+    <dimen name="icon_size">24dp</dimen>
+    <dimen name="text_title">20sp</dimen>
+    <dimen name="text_body">16sp</dimen>
+    <dimen name="text_body_22">22sp</dimen>
+    <dimen name="margin_bottom_8">8dp</dimen>
+
+
+
+
+</resources>
