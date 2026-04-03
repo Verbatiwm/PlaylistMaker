@@ -1,41 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.myapplication1.MediaActivity">
+    android:fitsSystemWindows="true">
 
-    <LinearLayout
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="85dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="@dimen/padding_screen_16"
-        android:paddingTop="@dimen/padding_screen_32"
-        android:paddingEnd="@dimen/padding_screen_16">
+        android:layout_height="?attr/actionBarSize"
+        android:background="@color/gray"
+        android:title="@string/media"
+        android:titleTextColor="@android:color/white"
+        app:navigationIcon="@drawable/ic_back"
+        app:titleCentered="true"/>
 
-        <FrameLayout
-            android:layout_width="@dimen/header_height"
-            android:layout_height="@dimen/header_height">
-
-            <ImageView
-                android:id="@+id/back_button"
-                android:layout_width="@dimen/margin_24"
-                android:layout_height="@dimen/margin_24"
-                android:layout_gravity="center"
-                android:src="@drawable/ic_back" />
-        </FrameLayout>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/margin_bottom_8"
-            android:text="@string/media"
-            android:textColor="@color/black"
-            android:textSize="@dimen/text_body_22" />
-    </LinearLayout>
-
-
-</LinearLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
