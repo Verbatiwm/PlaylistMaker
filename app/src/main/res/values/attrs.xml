@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="colorIcon" format="color"/>
+    <attr name="colorSwitchThumb" format="color"/>
+    <attr name="colorSwitchTrack" format="color"/>
+    <attr name="hint_color" format="color"/>
+    <attr name="search_loop">@color/gray</attr>
+
+</resources>
