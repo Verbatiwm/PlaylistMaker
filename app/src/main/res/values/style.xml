@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="MainButtonStyle" parent="Widget.MaterialComponents.Button.UnelevatedButton">
+        <item name="android:textAlignment">center</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">0dp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:backgroundTint">?attr/colorSurface</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="android:textSize">@dimen/text_button</item>
+        <item name="android:fontFamily">@font/ys_display_medium</item>
+        <item name="cornerRadius">@dimen/corner_radius</item>
+        <item name="iconGravity">textStart</item>
+        <item name="iconPadding">@dimen/icon_padding</item>
+        <item name="iconTint">@color/black</item>
+        <item name="android:elevation">0dp</item>
+        <item name="elevation">0dp</item>
+        <item name="android:stateListAnimator">@null</item>
+        <item name="android:textAllCaps">false</item>
+     </style>
+
+    <style name="MaterialTextViewStyle">
+        <item name="android:paddingHorizontal">@dimen/padding_screen_16</item>
+        <item name="android:paddingVertical">@dimen/padding_screen_24</item>
+        <item name="android:textColor">?attr/colorOnBackground</item>
+        <item name="android:textSize">@dimen/text_body</item>
+        <item name="android:drawablePadding">8dp</item>
+        <item name="android:fontFamily">@font/ys_text_regular</item>
+    </style>
+
+    <style name="MainToolbarStyle">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">?attr/actionBarSize</item>
+        <item name="titleTextAppearance">@style/ToolbarTitle</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="titleTextColor">?attr/colorOnBackground</item>
+        <item name="elevation">0dp</item>
+        <item name="android:elevation">0dp</item>
+    </style>
+
+    <style name="ToolbarTitle">
+        <item name="android:fontFamily">@font/ys_display_medium</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:textColor">?attr/colorOnBackground</item>
+    </style>
+
+
+
+
+</resources>

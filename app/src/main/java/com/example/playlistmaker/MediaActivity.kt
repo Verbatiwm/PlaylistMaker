@@ -1,11 +1,9 @@
-package com.example.myapplication1
+package com.example.playlistmaker
 
 import android.os.Bundle
-import android.widget.ImageView
 import androidx.activity.enableEdgeToEdge
 
 import androidx.appcompat.app.AppCompatActivity
-import com.example.playlistmaker.R
 import com.google.android.material.appbar.MaterialToolbar
 
 

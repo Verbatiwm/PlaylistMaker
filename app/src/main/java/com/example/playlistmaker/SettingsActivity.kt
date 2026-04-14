@@ -1,18 +1,17 @@
-package com.example.myapplication1
+package com.example.playlistmaker
 
 import android.annotation.SuppressLint
 import android.content.Intent
+
 import android.os.Bundle
 import android.view.View
-import android.widget.ImageView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.content.FileProvider
-import com.example.playlistmaker.R
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.switchmaterial.SwitchMaterial
-import java.io.File
+import androidx.core.net.toUri
+
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -24,14 +23,55 @@ class SettingsActivity : AppCompatActivity() {
 
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
 
-        setSupportActionBar(toolbar)   // 🔥 THIS IS THE KEY
+        setSupportActionBar(toolbar)
 
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = "Настроики"
+
 
         toolbar.setNavigationOnClickListener {
             finish()
         }
+        val share = findViewById<View>(R.id.share)
+
+        share.setOnClickListener {
+
+
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, getString(R.string.share_message))
+            }
+            val chooser = Intent.createChooser(intent, getString(R.string.chooser_email))
+            startActivity(chooser)
+
+        }
+
+        val support = findViewById<View>(R.id.support)
+
+        support.setOnClickListener {
+
+            val email = getString(R.string.support_email)
+            val subject = getString(R.string.support_subject)
+            val message = getString(R.string.support_message)
+
+            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                data = "mailto:".toUri()
+                putExtra(Intent.EXTRA_EMAIL, arrayOf(email))
+                putExtra(Intent.EXTRA_SUBJECT, subject)
+                putExtra(Intent.EXTRA_TEXT, message)
+            }
+
+            startActivity(Intent.createChooser(intent, getString(R.string.chooser_email)))
+        }
+
+        val agreement = findViewById<View>(R.id.agreement)
+
+        agreement.setOnClickListener {
+
+            val url = getString(R.string.agreement_url)
+
+            val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+
+
+            startActivity(Intent.createChooser(intent, getString(R.string.chooser_browser)))        }
 
         val switch = findViewById<SwitchMaterial>(R.id.theme_switch)
 
