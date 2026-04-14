@@ -11,8 +11,9 @@
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="hint_color">@color/gray</item>
         <item name="search_loop">@color/gray</item>
-        <item name="colorBackground">@color/blue</item>
+        <item name="colorBackground">@color/white</item>
         <item name="clearButton">@color/gray</item>
+        <item name="mainBackground">@color/blue</item>
     </style>
 
 </resources>

@@ -17,5 +17,6 @@
         <item name="search_loop">@color/dark_blue_gray</item>
         <item name="colorBackground">@color/dark_blue_gray</item>
         <item name="clearButton">@color/dark_blue_gray</item>
+        <item name="mainBackground">@color/dark_blue_gray</item>
     </style>
 </resources>

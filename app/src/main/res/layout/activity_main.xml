@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="?attr/colorBackground"
+    android:background="?attr/mainBackground"
     android:padding="@dimen/padding_screen_16"
     >
 
@@ -14,7 +14,7 @@
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorBackground"
+        android:background="?attr/mainBackground"
         app:title="@string/app_name"
         app:titleTextColor="@color/white"
         app:contentInsetStart="0dp"

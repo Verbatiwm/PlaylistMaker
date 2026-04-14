@@ -7,5 +7,7 @@
     <attr name="search_loop" format="color"/>
     <attr name="colorBackground" format="color"/>
     <attr name="clearButton" format="color"/>
+    <attr name="mainBackground" format="color"/>
+
 
 </resources>
