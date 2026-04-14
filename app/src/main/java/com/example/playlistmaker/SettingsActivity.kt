@@ -2,7 +2,7 @@ package com.example.playlistmaker
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.net.Uri
+
 import android.os.Bundle
 import android.view.View
 import androidx.activity.enableEdgeToEdge
@@ -52,11 +52,12 @@ class SettingsActivity : AppCompatActivity() {
             val subject = getString(R.string.support_subject)
             val message = getString(R.string.support_message)
 
-            val uri = ("mailto:$email" +
-                    "?subject=" + Uri.encode(subject) +
-                    "&body=" + Uri.encode(message)).toUri()
-
-            val intent = Intent(Intent.ACTION_SENDTO, uri)
+            val intent = Intent(Intent.ACTION_SENDTO).apply {
+                data = "mailto:".toUri()
+                putExtra(Intent.EXTRA_EMAIL, arrayOf(email))
+                putExtra(Intent.EXTRA_SUBJECT, subject)
+                putExtra(Intent.EXTRA_TEXT, message)
+            }
 
             startActivity(Intent.createChooser(intent, getString(R.string.chooser_email)))
         }

@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         app:title="@string/settings"
-        app:navigationIcon="@drawable/ic_back"
+        app:navigationIcon="@drawable/ic_back_arrow_24"
 
         style="MainToolbarStyle"/>
 
@@ -59,7 +59,7 @@
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/agreement"
         android:text="@string/agreement"
-        android:drawableEnd="@drawable/ic_arrow"
+        android:drawableEnd="@drawable/ic_arrow_forward_24"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
 

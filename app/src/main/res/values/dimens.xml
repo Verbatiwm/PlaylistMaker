@@ -6,6 +6,7 @@
     <dimen name="corner_radius">16dp</dimen>
     <dimen name="padding_screen_24">24dp</dimen>
     <dimen name="padding_screen_16">16dp</dimen>
+
     <dimen name="padding_screen_32">32dp</dimen>
     <dimen name="margin_24">24dp</dimen>
     <dimen name="header_height">48dp</dimen>

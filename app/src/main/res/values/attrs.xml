@@ -4,6 +4,8 @@
     <attr name="colorSwitchThumb" format="color"/>
     <attr name="colorSwitchTrack" format="color"/>
     <attr name="hint_color" format="color"/>
-    <attr name="search_loop">@color/gray</attr>
+    <attr name="search_loop" format="color"/>
+    <attr name="colorBackground" format="color"/>
+    <attr name="clearButton" format="color"/>
 
 </resources>

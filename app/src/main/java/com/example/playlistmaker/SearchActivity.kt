@@ -10,11 +10,16 @@ import android.widget.EditText
 import android.widget.ImageView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.doOnTextChanged
 import com.google.android.material.appbar.MaterialToolbar
 
 class SearchActivity : AppCompatActivity() {
 
     private var searchText: String = ""
+
+    companion object {
+        const val SEARCH_TEXT_KEY = "SEARCH_TEXT"
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,8 +36,8 @@ class SearchActivity : AppCompatActivity() {
         clearButton.visibility = View.GONE
 
 
-        if (savedInstanceState != null) {
-            searchText = savedInstanceState.getString("SEARCH_TEXT", "")
+        savedInstanceState?.let {
+            searchText = it.getString(SEARCH_TEXT_KEY, "")
             input.setText(searchText)
             input.setSelection(searchText.length)
         }
@@ -45,18 +50,12 @@ class SearchActivity : AppCompatActivity() {
         }
 
 
-        input.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+        input.doOnTextChanged { text, _, _, _ ->
+            searchText = text.toString()
 
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                searchText = s.toString()
-
-                clearButton.visibility =
-                    if (s.isNullOrEmpty()) View.GONE else View.VISIBLE
-            }
-
-            override fun afterTextChanged(s: Editable?) {}
-        })
+            clearButton.visibility =
+                if (text.isNullOrEmpty()) View.GONE else View.VISIBLE
+        }
 
 
         clearButton.setOnClickListener {
@@ -77,7 +76,7 @@ class SearchActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putString("SEARCH_TEXT", searchText)
+        outState.putString(SEARCH_TEXT_KEY, searchText)
     }
 
 
