@@ -9,10 +9,11 @@
     >
 
     <LinearLayout
+
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
-
+        android:orientation="vertical"
+        android:background="?attr/colorBackground">
 
         <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
@@ -22,49 +23,50 @@
             app:navigationIcon="@drawable/ic_back_arrow_24"
             app:title="@string/search" />
 
-
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp">
-
+            android:layout_margin="16dp">
 
             <EditText
                 android:id="@+id/search_input"
                 android:layout_width="match_parent"
-                android:layout_height="36dp"
-                android:background="@drawable/search_bg"
+                android:layout_height="40dp"
+                android:background="@drawable/ic_search_bg"
                 android:hint="@string/search"
-
+                android:textColor="?attr/always_dark_blue"
                 android:textColorHint="?attr/hint_color"
                 android:inputType="text"
-                android:textColor="@color/black"
                 android:maxLines="1"
-                android:paddingStart="@dimen/padding_screen_32"
-                android:paddingEnd="@dimen/padding_screen_32"
-                android:textSize="16sp" />
-
+                android:paddingStart="40dp"
+                android:paddingEnd="40dp"
+                android:textSize="16sp"/>
 
             <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
+                android:layout_width="14dp"
+                android:layout_height="14dp"
                 android:layout_gravity="start|center_vertical"
                 android:layout_marginStart="8dp"
-                android:src="@drawable/search_loop"
-                app:tint="?attr/search_loop" />
-
+                android:src="@drawable/ic_search_loop"
+                app:tint="?attr/search_loop"/>
 
             <ImageView
                 android:id="@+id/clear_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="12dp"
+                android:layout_height="12dp"
                 android:layout_gravity="end|center_vertical"
                 android:layout_marginEnd="8dp"
                 android:src="@drawable/ic_clear_24"
-
-                app:tint="?attr/clearButton" />
+                app:tint="?attr/clearButton"/>
 
         </FrameLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="16dp"/>
 
     </LinearLayout>
 

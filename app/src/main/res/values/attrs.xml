@@ -8,6 +8,8 @@
     <attr name="colorBackground" format="color"/>
     <attr name="clearButton" format="color"/>
     <attr name="mainBackground" format="color"/>
+    <attr name="always_dark_blue" format="color"/>
+
 
 
 </resources>

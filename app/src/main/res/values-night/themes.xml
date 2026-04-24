@@ -5,6 +5,7 @@
 
 
         <item name="colorOnBackground">@color/white</item>
+        <item name="always_dark_blue">@color/dark_blue_gray</item>
         <item name="colorIcon">@color/white</item>
         <item name="colorSurface">@color/white</item>
         <item name="android:fillColor">@color/white</item>
