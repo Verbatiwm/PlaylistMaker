@@ -15,8 +15,10 @@
     <color name="switch_thumb_on">#76EAE0</color>
     <color name="switch_track_on">#00D6C3</color>
     <color name="switch_thumb_off">#3772E7</color>
-    <color name="switch_track_off">#555555</color>
+    <color name="switch_track_off">#9FBBF3</color>
     <color name="light_gray">#E6E8EB</color>
+
+
 
 
 </resources>
