@@ -31,7 +31,7 @@
             style="@style/MainButtonStyle"
             android:layout_marginBottom="@dimen/margin_bottom_8"
             android:text="@string/search"
-            app:icon="@drawable/search_icon"
+            app:icon="@drawable/ic_search_icon"
 
              />
 
@@ -40,7 +40,7 @@
             style="@style/MainButtonStyle"
             android:layout_marginBottom="@dimen/margin_bottom_8"
             android:text="@string/media"
-            app:icon="@drawable/music_icon"
+            app:icon="@drawable/ic_music"
 
              />
 
@@ -48,7 +48,7 @@
             android:id="@+id/settings_button"
             style="@style/MainButtonStyle"
             android:text="@string/settings"
-            app:icon="@drawable/setting_icon"
+            app:icon="@drawable/ic_setting_icon"
 
             />
 
