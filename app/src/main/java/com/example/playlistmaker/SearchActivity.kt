@@ -96,7 +96,13 @@ class SearchActivity : AppCompatActivity() {
 
             clearButton.visibility =
                 if (text.isNullOrEmpty()) View.GONE else View.VISIBLE
+
+            if (text.isNullOrEmpty()) {
+                recyclerView.visibility = View.GONE
+                hidePlaceholders()
+            }
         }
+
 
 
         clearButton.setOnClickListener {
