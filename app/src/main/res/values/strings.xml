@@ -23,5 +23,9 @@
     <string name="chooser_email">Выберите почтовое приложение</string>
     <string name="chooser_browser">Открыть в браузере</string>
 
+    <string name="search_error">Ничего не нашлось</string>
+    <string name="retry">Обновить</string>
+    <string name="Connection_error">Загрузка не удалась. Проверьте подключение к интернету</string>
+
 
 </resources>
