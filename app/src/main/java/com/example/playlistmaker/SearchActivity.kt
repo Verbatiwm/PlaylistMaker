@@ -38,6 +38,11 @@ class SearchActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
 
+    private lateinit var history: SearchHistory
+
+    private lateinit var historyTitle: TextView
+    private lateinit var clearHistoryButton: Button
+
     companion object {
         const val SEARCH_TEXT_KEY = "SEARCH_TEXT"
     }
@@ -56,9 +61,18 @@ class SearchActivity : AppCompatActivity() {
         placeholderDescription = findViewById(R.id.placeholder_description)
         retryButton = findViewById(R.id.retry_button)
 
+
+        historyTitle = findViewById(R.id.historyTitle)
+        clearHistoryButton = findViewById(R.id.clearHistoryButton)
+
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         val input = findViewById<EditText>(R.id.search_input)
         val clearButton = findViewById<ImageView>(R.id.clear_button)
+
+        history = SearchHistory(
+            getSharedPreferences("prefs", MODE_PRIVATE)
+        )
+
         recyclerView = findViewById(R.id.recycler_view)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
@@ -90,6 +104,10 @@ class SearchActivity : AppCompatActivity() {
             imm.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT)
         }
 
+        if (searchText.isEmpty()) {
+            showHistory()
+        }
+
 
         input.doOnTextChanged { text, _, _, _ ->
             searchText = text.toString()
@@ -98,8 +116,11 @@ class SearchActivity : AppCompatActivity() {
                 if (text.isNullOrEmpty()) View.GONE else View.VISIBLE
 
             if (text.isNullOrEmpty()) {
-                recyclerView.visibility = View.GONE
                 hidePlaceholders()
+                showHistory()
+            } else {
+                historyTitle.visibility = View.GONE
+                clearHistoryButton.visibility = View.GONE
             }
         }
 
@@ -111,35 +132,45 @@ class SearchActivity : AppCompatActivity() {
             clearButton.visibility = View.GONE
             recyclerView.visibility = View.GONE
             hidePlaceholders()
+            showHistory()
         }
 
 
         input.setOnEditorActionListener { _, actionId, _ ->
 
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-
                 hideKeyboard(input)
-
                 searchTracks(input.text.toString())
-
                 true
             } else {
                 false
             }
         }
 
+        clearHistoryButton.setOnClickListener {
+            history.clearHistory()
+            showHistory()
+        }
 
+    }
 
-
-
-
+    override fun onResume() {
+        super.onResume()
+        if (searchText.isEmpty()) {
+            showHistory()
+        }
     }
 
     private fun searchTracks(text: String) {
 
         if (text.trim().isEmpty()) return
 
+        recyclerView.visibility = View.GONE
+
         lastSearchText = text
+
+        historyTitle.visibility = View.GONE
+        clearHistoryButton.visibility = View.GONE
 
         RetrofitClient.api.search(text)
             .enqueue(object : Callback<SearchResponse> {
@@ -164,6 +195,7 @@ class SearchActivity : AppCompatActivity() {
                             val mappedTracks = tracks.map {
 
                                 Track(
+                                    trackId = it.trackId ?: 0,
                                     trackName = it.trackName ?: "Unknown",
                                     artistName = it.artistName ?: "Unknown",
                                     trackTimeMillis = it.trackTimeMillis ?: 0L,
@@ -171,7 +203,10 @@ class SearchActivity : AppCompatActivity() {
                                 )
                             }
 
-                            recyclerView.adapter = TrackAdapter(mappedTracks)
+
+                            recyclerView.adapter = TrackAdapter(mappedTracks) { track ->
+                                history.addTrack(track)
+                            }
                             recyclerView.visibility = View.VISIBLE
                         }
 
@@ -258,6 +293,29 @@ class SearchActivity : AppCompatActivity() {
     private fun hidePlaceholders() {
 
         placeholderContainer.visibility = View.GONE
+    }
+
+    private fun showHistory() {
+        val historyList = history.getHistory()
+
+        if (historyList.isEmpty()) {
+            historyTitle.visibility = View.GONE
+            clearHistoryButton.visibility = View.GONE
+            recyclerView.visibility = View.GONE
+            return
+        }
+
+        hidePlaceholders()
+
+        historyTitle.visibility = View.VISIBLE
+        clearHistoryButton.visibility = View.VISIBLE
+
+        recyclerView.adapter = TrackAdapter(historyList) { track ->
+            history.addTrack(track)
+            showHistory()
+        }
+
+        recyclerView.visibility = View.VISIBLE
     }
 
 }
