@@ -26,6 +26,13 @@
     <string name="search_error">Ничего не нашлось</string>
     <string name="retry">Обновить</string>
     <string name="Connection_error">Загрузка не удалась. Проверьте подключение к интернету</string>
+    <string name="youSearched">Вы искали</string>
+    <string name="clearHistory">Очистить историю</string>
+
+
+
+
+
 
 
 </resources>

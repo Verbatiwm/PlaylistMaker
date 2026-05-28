@@ -75,18 +75,19 @@ class SettingsActivity : AppCompatActivity() {
 
         val switch = findViewById<SwitchMaterial>(R.id.theme_switch)
 
-        val currentNightMode = resources.configuration.uiMode and
-                android.content.res.Configuration.UI_MODE_NIGHT_MASK
 
-        switch.isChecked = currentNightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES
+
+        val app = applicationContext as App
+
+
+        switch.isChecked = app.darkTheme
+
+
         switch.setOnCheckedChangeListener { _, isChecked ->
-
-            if (isChecked) {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-            } else {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-            }
+            app.switchTheme(isChecked)
         }
+
+
 
 
     }
