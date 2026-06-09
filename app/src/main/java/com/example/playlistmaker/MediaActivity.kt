@@ -9,7 +9,8 @@ import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.google.android.material.appbar.MaterialToolbar
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
@@ -17,27 +18,28 @@ import android.os.Looper
 class MediaActivity : AppCompatActivity() {
 
     private lateinit var track: Track
-
     private lateinit var currentTimeText: TextView
     private var isPlaying = false
     private var isFavorite = false
     private var mediaPlayer: MediaPlayer? = null
     private var isPrepared = false
+    private val dateFormat by lazy {
+        SimpleDateFormat("mm:ss", Locale.getDefault())
+    }
 
+    companion object {
+        private const val TIMER_UPDATE_DELAY = 300L
+    }
     private val handler = Handler(Looper.getMainLooper())
-
     private val updateRunnable = object : Runnable {
         override fun run() {
 
             mediaPlayer?.let {
 
                 currentTimeText.text =
-                    SimpleDateFormat(
-                        "mm:ss",
-                        Locale.getDefault()
-                    ).format(it.currentPosition)
+                    dateFormat.format(it.currentPosition)
 
-                handler.postDelayed(this, 300)
+                handler.postDelayed(this, TIMER_UPDATE_DELAY)
             }
         }
     }
@@ -45,7 +47,6 @@ class MediaActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_media)
-
 
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         toolbar.setNavigationOnClickListener { finish() }
@@ -59,14 +60,7 @@ class MediaActivity : AppCompatActivity() {
             return
         }
 
-
         track = trackExtra as Track
-
-
-
-
-
-
 
         val trackName = findViewById<TextView>(R.id.trackName)
         val artistName = findViewById<TextView>(R.id.artistName)
@@ -88,11 +82,8 @@ class MediaActivity : AppCompatActivity() {
         val countryLabel = findViewById<TextView>(R.id.countryLabel)
         val countryValue = findViewById<TextView>(R.id.countryValue)
 
-
-
         trackName.text = track.trackName
         artistName.text = track.artistName
-
 
         val highResCover = track.artworkUrl100
             .replaceAfterLast('/', "512x512bb.jpg")
@@ -104,12 +95,9 @@ class MediaActivity : AppCompatActivity() {
             .fallback(R.drawable.ic_placeholder)
             .into(cover)
 
-
         currentTimeText.text = "00:00"
 
-
         durationValue.text = formatTime(track.trackTimeMillis)
-
 
         if (!track.collectionName.isNullOrEmpty()) {
             albumValue.text = track.collectionName
@@ -118,7 +106,6 @@ class MediaActivity : AppCompatActivity() {
             albumValue.visibility = View.GONE
         }
 
-
         if (!track.releaseDate.isNullOrEmpty()) {
             yearValue.text = extractYear(track.releaseDate!!)
         } else {
@@ -126,14 +113,12 @@ class MediaActivity : AppCompatActivity() {
             yearValue.visibility = View.GONE
         }
 
-
         if (!track.primaryGenreName.isNullOrEmpty()) {
             genreValue.text = track.primaryGenreName
         } else {
             genreLabel.visibility = View.GONE
             genreValue.visibility = View.GONE
         }
-
 
         if (!track.country.isNullOrEmpty()) {
             countryValue.text = track.country
@@ -167,11 +152,7 @@ class MediaActivity : AppCompatActivity() {
                 )
             }
         }
-
-
-
     }
-
 
     private fun preparePlayer() {
 
@@ -192,7 +173,6 @@ class MediaActivity : AppCompatActivity() {
                     isPrepared = true
                     currentTimeText.text = "00:00"
                 }
-
                 setOnErrorListener { _, _, _ ->
 
                     currentTimeText.text = "ERROR"
@@ -205,14 +185,10 @@ class MediaActivity : AppCompatActivity() {
             currentTimeText.text = "ERROR"
         }
     }
-
-
     private fun formatTime(millis: Long): String {
         val sdf = SimpleDateFormat("mm:ss", Locale.getDefault())
         return sdf.format(Date(millis))
     }
-
-
     private fun extractYear(date: String): String {
         return try {
             date.take(4)
