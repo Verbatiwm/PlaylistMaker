@@ -1,6 +1,7 @@
 package com.example.playlistmaker
 
 
+
 import android.content.Intent
 import android.os.Bundle
 import com.google.android.material.button.MaterialButton
@@ -31,8 +32,9 @@ class MainActivity : AppCompatActivity(){
         }
 
         media.setOnClickListener {
-            val intent = Intent(this, MediaActivity::class.java)
+            val intent = Intent(this, SearchActivity::class.java)
             startActivity(intent)
+
         }
         settings.setOnClickListener {
             val intent = Intent(this, SettingsActivity::class.java)
