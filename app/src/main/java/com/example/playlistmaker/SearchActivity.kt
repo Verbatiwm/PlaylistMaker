@@ -1,5 +1,6 @@
 package com.example.playlistmaker
 
+import android.content.Intent
 import android.os.Bundle
 import android.content.res.Configuration
 import android.view.View
@@ -31,6 +32,8 @@ class SearchActivity : AppCompatActivity() {
 
     private lateinit var placeholderDescription: TextView
     private lateinit var retryButton: Button
+
+
 
     private var searchText: String = ""
 
@@ -116,11 +119,14 @@ class SearchActivity : AppCompatActivity() {
                 if (text.isNullOrEmpty()) View.GONE else View.VISIBLE
 
             if (text.isNullOrEmpty()) {
+                recyclerView.visibility = View.GONE
                 hidePlaceholders()
                 showHistory()
             } else {
                 historyTitle.visibility = View.GONE
                 clearHistoryButton.visibility = View.GONE
+
+
             }
         }
 
@@ -199,14 +205,28 @@ class SearchActivity : AppCompatActivity() {
                                     trackName = it.trackName ?: "Unknown",
                                     artistName = it.artistName ?: "Unknown",
                                     trackTimeMillis = it.trackTimeMillis ?: 0L,
-                                    artworkUrl100 = it.artworkUrl100 ?: ""
+                                    artworkUrl100 = it.artworkUrl100 ?: "",
+
+                                    collectionName = it.collectionName,
+                                    releaseDate = it.releaseDate,
+                                    primaryGenreName = it.primaryGenreName ?: "Unknown",
+                                    country = it.country ?: "Unknown",
+                                    previewUrl = it.previewUrl
                                 )
+
                             }
 
 
-                            recyclerView.adapter = TrackAdapter(mappedTracks) { track ->
+                            val adapter = TrackAdapter(mappedTracks) { track ->
+
                                 history.addTrack(track)
+
+                                val intent = Intent(this@SearchActivity, MediaActivity::class.java)
+                                intent.putExtra("track", track)
+                                startActivity(intent)
                             }
+
+                            recyclerView.adapter = adapter
                             recyclerView.visibility = View.VISIBLE
                         }
 
@@ -243,6 +263,8 @@ class SearchActivity : AppCompatActivity() {
     }
 
     private fun showEmptyPlaceholder() {
+
+
 
         recyclerView.visibility = View.GONE
         placeholderContainer.visibility = View.VISIBLE
@@ -312,15 +334,12 @@ class SearchActivity : AppCompatActivity() {
 
         recyclerView.adapter = TrackAdapter(historyList) { track ->
             history.addTrack(track)
-            showHistory()
+            val intent = Intent(this, MediaActivity::class.java)
+            intent.putExtra("track", track)
+            startActivity(intent)
         }
 
         recyclerView.visibility = View.VISIBLE
     }
 
 }
-
-
-
-
-
