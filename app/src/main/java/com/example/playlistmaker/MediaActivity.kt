@@ -11,9 +11,15 @@ import com.google.android.material.appbar.MaterialToolbar
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
+import com.example.playlistmaker.network.RetrofitClient
+import com.example.playlistmaker.network.SearchResponse
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class MediaActivity : AppCompatActivity() {
 
@@ -23,14 +29,21 @@ class MediaActivity : AppCompatActivity() {
     private var isPlaying = false
     private var isFavorite = false
     private var mediaPlayer: MediaPlayer? = null
-    private var isPrepared = false
     private var playWhenPrepared = false
+    private var playerState = STATE_DEFAULT
+    private var previewUrl: String? = null
+    private var previewUrlCall: Call<SearchResponse>? = null
     private val dateFormat by lazy {
         SimpleDateFormat("mm:ss", Locale.getDefault())
     }
 
     companion object {
         private const val TIMER_UPDATE_DELAY = 300L
+        private const val PREVIEW_DURATION_MILLIS = 30_000
+        private const val STATE_DEFAULT = 0
+        private const val STATE_PREPARED = 1
+        private const val STATE_PLAYING = 2
+        private const val STATE_PAUSED = 3
     }
     private val handler = Handler(Looper.getMainLooper())
     private val updateRunnable = object : Runnable {
@@ -39,7 +52,7 @@ class MediaActivity : AppCompatActivity() {
             mediaPlayer?.let {
 
                 currentTimeText.text =
-                    dateFormat.format(Date(it.currentPosition.toLong()))
+                    formatPreviewTimeLeft(it.currentPosition)
 
                 handler.postDelayed(this, TIMER_UPDATE_DELAY)
             }
@@ -63,6 +76,7 @@ class MediaActivity : AppCompatActivity() {
         }
 
         track = trackExtra as Track
+        previewUrl = track.previewUrl
 
         val trackName = findViewById<TextView>(R.id.trackName)
         val artistName = findViewById<TextView>(R.id.artistName)
@@ -97,7 +111,7 @@ class MediaActivity : AppCompatActivity() {
             .fallback(R.drawable.ic_placeholder)
             .into(cover)
 
-        currentTimeText.text = "00:00"
+        currentTimeText.text = "00:30"
 
         durationValue.text = formatTime(track.trackTimeMillis)
 
@@ -131,11 +145,7 @@ class MediaActivity : AppCompatActivity() {
 
         playButton.setOnClickListener {
 
-            if (isPlaying || playWhenPrepared) {
-                pausePlayer()
-            } else {
-                startPlayer()
-            }
+            playbackControl()
         }
 
         favButton.setOnClickListener {
@@ -156,22 +166,32 @@ class MediaActivity : AppCompatActivity() {
 
     private fun preparePlayer() {
 
-        if (track.previewUrl.isNullOrEmpty()) return
+        val url = previewUrl
+
+        if (url.isNullOrEmpty()) {
+            loadPreviewUrl()
+            return
+        }
 
         try {
+            mediaPlayer?.release()
+            mediaPlayer = null
+            playerState = STATE_DEFAULT
 
-            mediaPlayer = MediaPlayer()
+            mediaPlayer = MediaPlayer().apply {
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .build()
+                )
 
-            mediaPlayer?.apply {
-
-                setDataSource(track.previewUrl)
-
-                prepareAsync()
+                setDataSource(url)
 
                 setOnPreparedListener {
 
-                    isPrepared = true
-                    currentTimeText.text = "00:00"
+                    playerState = STATE_PREPARED
+                    currentTimeText.text = "00:30"
                     if (playWhenPrepared) {
                         startPlayer()
                     }
@@ -180,6 +200,7 @@ class MediaActivity : AppCompatActivity() {
 
                     this@MediaActivity.isPlaying = false
                     this@MediaActivity.playWhenPrepared = false
+                    this@MediaActivity.playerState = STATE_PREPARED
                     it.seekTo(0)
                     stopTimer()
                     currentTimeText.text = "00:00"
@@ -189,44 +210,101 @@ class MediaActivity : AppCompatActivity() {
 
                     this@MediaActivity.isPlaying = false
                     this@MediaActivity.playWhenPrepared = false
-                    this@MediaActivity.isPrepared = false
+                    this@MediaActivity.playerState = STATE_DEFAULT
                     stopTimer()
-                    currentTimeText.text = "00:00"
+                    currentTimeText.text = "00:30"
                     updatePlayButton()
                     true
                 }
+
+                prepareAsync()
             }
 
         } catch (e: Exception) {
 
-            currentTimeText.text = "00:00"
+            currentTimeText.text = "00:30"
+        }
+    }
+
+    private fun playbackControl() {
+        when {
+            playerState == STATE_PLAYING || playWhenPrepared -> pausePlayer()
+            playerState == STATE_PREPARED || playerState == STATE_PAUSED -> startPlayer()
+            playerState == STATE_DEFAULT -> {
+                playWhenPrepared = true
+                updatePlayButton(isPendingStart = true)
+                preparePlayer()
+            }
         }
     }
 
     private fun startPlayer() {
-        if (track.previewUrl.isNullOrEmpty()) return
-
-        if (!isPrepared) {
+        if (previewUrl.isNullOrEmpty()) {
             playWhenPrepared = true
             updatePlayButton(isPendingStart = true)
+            loadPreviewUrl()
+            return
+        }
+
+        if (playerState == STATE_DEFAULT) {
+            playWhenPrepared = true
+            updatePlayButton(isPendingStart = true)
+            preparePlayer()
             return
         }
 
         mediaPlayer?.start()
         isPlaying = true
         playWhenPrepared = false
+        playerState = STATE_PLAYING
         updatePlayButton()
         startTimer()
     }
 
     private fun pausePlayer() {
-        if (isPrepared && isPlaying) {
+        if (playerState == STATE_PLAYING) {
             mediaPlayer?.pause()
+            playerState = STATE_PAUSED
         }
         isPlaying = false
         playWhenPrepared = false
         stopTimer()
         updatePlayButton()
+    }
+
+    private fun loadPreviewUrl() {
+        if (previewUrlCall != null) return
+
+        previewUrlCall = RetrofitClient.api.lookup(track.trackId)
+        previewUrlCall?.enqueue(object : Callback<SearchResponse> {
+            override fun onResponse(
+                call: Call<SearchResponse>,
+                response: Response<SearchResponse>
+            ) {
+                previewUrlCall = null
+                if (call.isCanceled) return
+
+                previewUrl = response.body()
+                    ?.results
+                    ?.firstOrNull()
+                    ?.previewUrl
+
+                if (playWhenPrepared && !previewUrl.isNullOrEmpty()) {
+                    preparePlayer()
+                } else if (previewUrl.isNullOrEmpty()) {
+                    playWhenPrepared = false
+                    updatePlayButton()
+                }
+            }
+
+            override fun onFailure(call: Call<SearchResponse>, t: Throwable) {
+                previewUrlCall = null
+                if (call.isCanceled) return
+
+                playWhenPrepared = false
+                updatePlayButton()
+            }
+        })
     }
 
     private fun startTimer() {
@@ -251,6 +329,14 @@ class MediaActivity : AppCompatActivity() {
         val sdf = SimpleDateFormat("mm:ss", Locale.getDefault())
         return sdf.format(Date(millis))
     }
+
+    private fun formatPreviewTimeLeft(currentPosition: Int): String {
+        val timeLeft = (PREVIEW_DURATION_MILLIS - currentPosition)
+            .coerceAtLeast(0)
+            .toLong()
+        return dateFormat.format(Date(timeLeft))
+    }
+
     private fun extractYear(date: String): String {
         return try {
             date.take(4)
@@ -262,6 +348,7 @@ class MediaActivity : AppCompatActivity() {
         super.onDestroy()
 
         stopTimer()
+        previewUrlCall?.cancel()
 
         mediaPlayer?.release()
         mediaPlayer = null
