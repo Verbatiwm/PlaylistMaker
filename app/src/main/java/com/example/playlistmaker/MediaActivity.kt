@@ -19,10 +19,12 @@ class MediaActivity : AppCompatActivity() {
 
     private lateinit var track: Track
     private lateinit var currentTimeText: TextView
+    private lateinit var playButton: ImageButton
     private var isPlaying = false
     private var isFavorite = false
     private var mediaPlayer: MediaPlayer? = null
     private var isPrepared = false
+    private var playWhenPrepared = false
     private val dateFormat by lazy {
         SimpleDateFormat("mm:ss", Locale.getDefault())
     }
@@ -37,7 +39,7 @@ class MediaActivity : AppCompatActivity() {
             mediaPlayer?.let {
 
                 currentTimeText.text =
-                    dateFormat.format(it.currentPosition)
+                    dateFormat.format(Date(it.currentPosition.toLong()))
 
                 handler.postDelayed(this, TIMER_UPDATE_DELAY)
             }
@@ -50,7 +52,7 @@ class MediaActivity : AppCompatActivity() {
 
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         toolbar.setNavigationOnClickListener { finish() }
-        val playButton = findViewById<ImageButton>(R.id.playButton)
+        playButton = findViewById(R.id.playButton)
         val favButton = findViewById<ImageButton>(R.id.favButton)
 
         val trackExtra = intent.getSerializableExtra("track")
@@ -129,12 +131,10 @@ class MediaActivity : AppCompatActivity() {
 
         playButton.setOnClickListener {
 
-            isPlaying = !isPlaying
-
-            if (isPlaying) {
-                playButton.setBackgroundResource(R.drawable.ic_pause_button)
+            if (isPlaying || playWhenPrepared) {
+                pausePlayer()
             } else {
-                playButton.setBackgroundResource(R.drawable.ic_play_button)
+                startPlayer()
             }
         }
 
@@ -172,19 +172,81 @@ class MediaActivity : AppCompatActivity() {
 
                     isPrepared = true
                     currentTimeText.text = "00:00"
+                    if (playWhenPrepared) {
+                        startPlayer()
+                    }
+                }
+                setOnCompletionListener {
+
+                    this@MediaActivity.isPlaying = false
+                    this@MediaActivity.playWhenPrepared = false
+                    it.seekTo(0)
+                    stopTimer()
+                    currentTimeText.text = "00:00"
+                    updatePlayButton()
                 }
                 setOnErrorListener { _, _, _ ->
 
-                    currentTimeText.text = "ERROR"
+                    this@MediaActivity.isPlaying = false
+                    this@MediaActivity.playWhenPrepared = false
+                    this@MediaActivity.isPrepared = false
+                    stopTimer()
+                    currentTimeText.text = "00:00"
+                    updatePlayButton()
                     true
                 }
             }
 
         } catch (e: Exception) {
 
-            currentTimeText.text = "ERROR"
+            currentTimeText.text = "00:00"
         }
     }
+
+    private fun startPlayer() {
+        if (track.previewUrl.isNullOrEmpty()) return
+
+        if (!isPrepared) {
+            playWhenPrepared = true
+            updatePlayButton(isPendingStart = true)
+            return
+        }
+
+        mediaPlayer?.start()
+        isPlaying = true
+        playWhenPrepared = false
+        updatePlayButton()
+        startTimer()
+    }
+
+    private fun pausePlayer() {
+        if (isPrepared && isPlaying) {
+            mediaPlayer?.pause()
+        }
+        isPlaying = false
+        playWhenPrepared = false
+        stopTimer()
+        updatePlayButton()
+    }
+
+    private fun startTimer() {
+        handler.removeCallbacks(updateRunnable)
+        handler.post(updateRunnable)
+    }
+
+    private fun stopTimer() {
+        handler.removeCallbacks(updateRunnable)
+    }
+
+    private fun updatePlayButton(isPendingStart: Boolean = false) {
+        val buttonBackground = if (isPlaying || isPendingStart) {
+            R.drawable.ic_pause_button
+        } else {
+            R.drawable.ic_play_button
+        }
+        playButton.setBackgroundResource(buttonBackground)
+    }
+
     private fun formatTime(millis: Long): String {
         val sdf = SimpleDateFormat("mm:ss", Locale.getDefault())
         return sdf.format(Date(millis))
@@ -199,9 +261,16 @@ class MediaActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
 
-        handler.removeCallbacks(updateRunnable)
+        stopTimer()
 
         mediaPlayer?.release()
         mediaPlayer = null
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (isPlaying || playWhenPrepared) {
+            pausePlayer()
+        }
     }
 }

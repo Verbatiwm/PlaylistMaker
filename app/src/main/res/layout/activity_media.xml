@@ -95,7 +95,7 @@
             android:layout_width="84dp"
             android:layout_height="84dp"
             android:layout_marginTop="32dp"
-            android:background="@drawable/ic_pause_button"
+            android:background="@drawable/ic_play_button"
             app:layout_constraintTop_toBottomOf="@id/artistName"
             app:layout_constraintStart_toEndOf="@id/addButton"
             app:layout_constraintEnd_toStartOf="@id/favButton"/>
