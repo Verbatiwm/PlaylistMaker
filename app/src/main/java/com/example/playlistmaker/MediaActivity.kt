@@ -26,7 +26,7 @@ class MediaActivity : AppCompatActivity() {
     private lateinit var track: Track
     private lateinit var currentTimeText: TextView
     private lateinit var playButton: ImageButton
-    private var isPlaying = false
+
     private var isFavorite = false
     private var mediaPlayer: MediaPlayer? = null
     private var playWhenPrepared = false
@@ -39,7 +39,7 @@ class MediaActivity : AppCompatActivity() {
 
     companion object {
         private const val TIMER_UPDATE_DELAY = 300L
-        private const val PREVIEW_DURATION_MILLIS = 30_000
+
         private const val STATE_DEFAULT = 0
         private const val STATE_PREPARED = 1
         private const val STATE_PLAYING = 2
@@ -52,7 +52,7 @@ class MediaActivity : AppCompatActivity() {
             mediaPlayer?.let {
 
                 currentTimeText.text =
-                    formatPreviewTimeLeft(it.currentPosition)
+                    dateFormat.format(Date(it.currentPosition.toLong()))
 
                 handler.postDelayed(this, TIMER_UPDATE_DELAY)
             }
@@ -111,7 +111,7 @@ class MediaActivity : AppCompatActivity() {
             .fallback(R.drawable.ic_placeholder)
             .into(cover)
 
-        currentTimeText.text = "00:30"
+        resetCurrentTime()
 
         durationValue.text = formatTime(track.trackTimeMillis)
 
@@ -191,28 +191,28 @@ class MediaActivity : AppCompatActivity() {
                 setOnPreparedListener {
 
                     playerState = STATE_PREPARED
-                    currentTimeText.text = "00:30"
+                    resetCurrentTime()
                     if (playWhenPrepared) {
                         startPlayer()
                     }
                 }
                 setOnCompletionListener {
 
-                    this@MediaActivity.isPlaying = false
+
                     this@MediaActivity.playWhenPrepared = false
                     this@MediaActivity.playerState = STATE_PREPARED
                     it.seekTo(0)
                     stopTimer()
-                    currentTimeText.text = "00:00"
+                    resetCurrentTime()
                     updatePlayButton()
                 }
                 setOnErrorListener { _, _, _ ->
 
-                    this@MediaActivity.isPlaying = false
+
                     this@MediaActivity.playWhenPrepared = false
                     this@MediaActivity.playerState = STATE_DEFAULT
                     stopTimer()
-                    currentTimeText.text = "00:30"
+                    resetCurrentTime()
                     updatePlayButton()
                     true
                 }
@@ -222,7 +222,7 @@ class MediaActivity : AppCompatActivity() {
 
         } catch (e: Exception) {
 
-            currentTimeText.text = "00:30"
+            resetCurrentTime()
         }
     }
 
@@ -254,7 +254,7 @@ class MediaActivity : AppCompatActivity() {
         }
 
         mediaPlayer?.start()
-        isPlaying = true
+
         playWhenPrepared = false
         playerState = STATE_PLAYING
         updatePlayButton()
@@ -266,7 +266,7 @@ class MediaActivity : AppCompatActivity() {
             mediaPlayer?.pause()
             playerState = STATE_PAUSED
         }
-        isPlaying = false
+
         playWhenPrepared = false
         stopTimer()
         updatePlayButton()
@@ -317,7 +317,7 @@ class MediaActivity : AppCompatActivity() {
     }
 
     private fun updatePlayButton(isPendingStart: Boolean = false) {
-        val buttonBackground = if (isPlaying || isPendingStart) {
+        val buttonBackground = if (mediaPlayer?.isPlaying == true  || isPendingStart) {
             R.drawable.ic_pause_button
         } else {
             R.drawable.ic_play_button
@@ -330,11 +330,8 @@ class MediaActivity : AppCompatActivity() {
         return sdf.format(Date(millis))
     }
 
-    private fun formatPreviewTimeLeft(currentPosition: Int): String {
-        val timeLeft = (PREVIEW_DURATION_MILLIS - currentPosition)
-            .coerceAtLeast(0)
-            .toLong()
-        return dateFormat.format(Date(timeLeft))
+    private fun resetCurrentTime() {
+        currentTimeText.text = formatTime(0L)
     }
 
     private fun extractYear(date: String): String {
@@ -356,7 +353,7 @@ class MediaActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        if (isPlaying || playWhenPrepared) {
+        if (mediaPlayer?.isPlaying == true|| playWhenPrepared) {
             pausePlayer()
         }
     }

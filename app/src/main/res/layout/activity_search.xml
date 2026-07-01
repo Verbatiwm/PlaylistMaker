@@ -191,10 +191,7 @@
                 android:layout_gravity="top|center_horizontal"
                 android:layout_marginTop="152dp"
                 android:indeterminate="true"
-                android:indeterminateDrawable="@drawable/ic_progressbar_indeterminate"
                 android:indeterminateTint="@color/blue"
-                android:progressTint="@color/blue"
-                android:secondaryProgressTint="@color/blue"
                 android:visibility="gone" />
 
         </FrameLayout>
