@@ -11,4 +11,9 @@ interface ITunesApi {
         @Query("term") text: String,
         @Query("entity") entity: String = "song"
     ): Call<SearchResponse>
+
+    @GET("lookup")
+    fun lookup(
+        @Query("id") trackId: Long
+    ): Call<SearchResponse>
 }

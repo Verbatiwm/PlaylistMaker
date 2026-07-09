@@ -11,24 +11,39 @@ import com.google.android.material.appbar.MaterialToolbar
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
+import com.example.playlistmaker.network.RetrofitClient
+import com.example.playlistmaker.network.SearchResponse
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class MediaActivity : AppCompatActivity() {
 
     private lateinit var track: Track
     private lateinit var currentTimeText: TextView
-    private var isPlaying = false
+    private lateinit var playButton: ImageButton
+
     private var isFavorite = false
     private var mediaPlayer: MediaPlayer? = null
-    private var isPrepared = false
+    private var playWhenPrepared = false
+    private var playerState = STATE_DEFAULT
+    private var previewUrl: String? = null
+    private var previewUrlCall: Call<SearchResponse>? = null
     private val dateFormat by lazy {
         SimpleDateFormat("mm:ss", Locale.getDefault())
     }
 
     companion object {
         private const val TIMER_UPDATE_DELAY = 300L
+
+        private const val STATE_DEFAULT = 0
+        private const val STATE_PREPARED = 1
+        private const val STATE_PLAYING = 2
+        private const val STATE_PAUSED = 3
     }
     private val handler = Handler(Looper.getMainLooper())
     private val updateRunnable = object : Runnable {
@@ -37,7 +52,7 @@ class MediaActivity : AppCompatActivity() {
             mediaPlayer?.let {
 
                 currentTimeText.text =
-                    dateFormat.format(it.currentPosition)
+                    dateFormat.format(Date(it.currentPosition.toLong()))
 
                 handler.postDelayed(this, TIMER_UPDATE_DELAY)
             }
@@ -50,7 +65,7 @@ class MediaActivity : AppCompatActivity() {
 
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         toolbar.setNavigationOnClickListener { finish() }
-        val playButton = findViewById<ImageButton>(R.id.playButton)
+        playButton = findViewById(R.id.playButton)
         val favButton = findViewById<ImageButton>(R.id.favButton)
 
         val trackExtra = intent.getSerializableExtra("track")
@@ -61,6 +76,7 @@ class MediaActivity : AppCompatActivity() {
         }
 
         track = trackExtra as Track
+        previewUrl = track.previewUrl
 
         val trackName = findViewById<TextView>(R.id.trackName)
         val artistName = findViewById<TextView>(R.id.artistName)
@@ -95,7 +111,7 @@ class MediaActivity : AppCompatActivity() {
             .fallback(R.drawable.ic_placeholder)
             .into(cover)
 
-        currentTimeText.text = "00:00"
+        resetCurrentTime()
 
         durationValue.text = formatTime(track.trackTimeMillis)
 
@@ -129,13 +145,7 @@ class MediaActivity : AppCompatActivity() {
 
         playButton.setOnClickListener {
 
-            isPlaying = !isPlaying
-
-            if (isPlaying) {
-                playButton.setBackgroundResource(R.drawable.ic_pause_button)
-            } else {
-                playButton.setBackgroundResource(R.drawable.ic_play_button)
-            }
+            playbackControl()
         }
 
         favButton.setOnClickListener {
@@ -156,39 +166,174 @@ class MediaActivity : AppCompatActivity() {
 
     private fun preparePlayer() {
 
-        if (track.previewUrl.isNullOrEmpty()) return
+        val url = previewUrl
+
+        if (url.isNullOrEmpty()) {
+            loadPreviewUrl()
+            return
+        }
 
         try {
+            mediaPlayer?.release()
+            mediaPlayer = null
+            playerState = STATE_DEFAULT
 
-            mediaPlayer = MediaPlayer()
+            mediaPlayer = MediaPlayer().apply {
+                setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .build()
+                )
 
-            mediaPlayer?.apply {
-
-                setDataSource(track.previewUrl)
-
-                prepareAsync()
+                setDataSource(url)
 
                 setOnPreparedListener {
 
-                    isPrepared = true
-                    currentTimeText.text = "00:00"
+                    playerState = STATE_PREPARED
+                    resetCurrentTime()
+                    if (playWhenPrepared) {
+                        startPlayer()
+                    }
+                }
+                setOnCompletionListener {
+
+
+                    this@MediaActivity.playWhenPrepared = false
+                    this@MediaActivity.playerState = STATE_PREPARED
+                    it.seekTo(0)
+                    stopTimer()
+                    resetCurrentTime()
+                    updatePlayButton()
                 }
                 setOnErrorListener { _, _, _ ->
 
-                    currentTimeText.text = "ERROR"
+
+                    this@MediaActivity.playWhenPrepared = false
+                    this@MediaActivity.playerState = STATE_DEFAULT
+                    stopTimer()
+                    resetCurrentTime()
+                    updatePlayButton()
                     true
                 }
+
+                prepareAsync()
             }
 
         } catch (e: Exception) {
 
-            currentTimeText.text = "ERROR"
+            resetCurrentTime()
         }
     }
+
+    private fun playbackControl() {
+        when {
+            playerState == STATE_PLAYING || playWhenPrepared -> pausePlayer()
+            playerState == STATE_PREPARED || playerState == STATE_PAUSED -> startPlayer()
+            playerState == STATE_DEFAULT -> {
+                playWhenPrepared = true
+                updatePlayButton(isPendingStart = true)
+                preparePlayer()
+            }
+        }
+    }
+
+    private fun startPlayer() {
+        if (previewUrl.isNullOrEmpty()) {
+            playWhenPrepared = true
+            updatePlayButton(isPendingStart = true)
+            loadPreviewUrl()
+            return
+        }
+
+        if (playerState == STATE_DEFAULT) {
+            playWhenPrepared = true
+            updatePlayButton(isPendingStart = true)
+            preparePlayer()
+            return
+        }
+
+        mediaPlayer?.start()
+
+        playWhenPrepared = false
+        playerState = STATE_PLAYING
+        updatePlayButton()
+        startTimer()
+    }
+
+    private fun pausePlayer() {
+        if (playerState == STATE_PLAYING) {
+            mediaPlayer?.pause()
+            playerState = STATE_PAUSED
+        }
+
+        playWhenPrepared = false
+        stopTimer()
+        updatePlayButton()
+    }
+
+    private fun loadPreviewUrl() {
+        if (previewUrlCall != null) return
+
+        previewUrlCall = RetrofitClient.api.lookup(track.trackId)
+        previewUrlCall?.enqueue(object : Callback<SearchResponse> {
+            override fun onResponse(
+                call: Call<SearchResponse>,
+                response: Response<SearchResponse>
+            ) {
+                previewUrlCall = null
+                if (call.isCanceled) return
+
+                previewUrl = response.body()
+                    ?.results
+                    ?.firstOrNull()
+                    ?.previewUrl
+
+                if (playWhenPrepared && !previewUrl.isNullOrEmpty()) {
+                    preparePlayer()
+                } else if (previewUrl.isNullOrEmpty()) {
+                    playWhenPrepared = false
+                    updatePlayButton()
+                }
+            }
+
+            override fun onFailure(call: Call<SearchResponse>, t: Throwable) {
+                previewUrlCall = null
+                if (call.isCanceled) return
+
+                playWhenPrepared = false
+                updatePlayButton()
+            }
+        })
+    }
+
+    private fun startTimer() {
+        handler.removeCallbacks(updateRunnable)
+        handler.post(updateRunnable)
+    }
+
+    private fun stopTimer() {
+        handler.removeCallbacks(updateRunnable)
+    }
+
+    private fun updatePlayButton(isPendingStart: Boolean = false) {
+        val buttonBackground = if (mediaPlayer?.isPlaying == true  || isPendingStart) {
+            R.drawable.ic_pause_button
+        } else {
+            R.drawable.ic_play_button
+        }
+        playButton.setBackgroundResource(buttonBackground)
+    }
+
     private fun formatTime(millis: Long): String {
         val sdf = SimpleDateFormat("mm:ss", Locale.getDefault())
         return sdf.format(Date(millis))
     }
+
+    private fun resetCurrentTime() {
+        currentTimeText.text = formatTime(0L)
+    }
+
     private fun extractYear(date: String): String {
         return try {
             date.take(4)
@@ -199,9 +344,17 @@ class MediaActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
 
-        handler.removeCallbacks(updateRunnable)
+        stopTimer()
+        previewUrlCall?.cancel()
 
         mediaPlayer?.release()
         mediaPlayer = null
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (mediaPlayer?.isPlaying == true|| playWhenPrepared) {
+            pausePlayer()
+        }
     }
 }
