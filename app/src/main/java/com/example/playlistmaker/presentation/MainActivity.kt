@@ -1,4 +1,4 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation
 
 
 
@@ -7,6 +7,7 @@ import android.os.Bundle
 import com.google.android.material.button.MaterialButton
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.appbar.MaterialToolbar
+import com.example.playlistmaker.R
 
 
 class MainActivity : AppCompatActivity(){

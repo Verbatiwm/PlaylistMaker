@@ -1,4 +1,4 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation
 
 import android.os.Bundle
 import android.view.View
@@ -15,11 +15,8 @@ import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
-import com.example.playlistmaker.network.RetrofitClient
-import com.example.playlistmaker.network.SearchResponse
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import com.example.playlistmaker.domain.models.Track
+import com.example.playlistmaker.R
 
 class MediaActivity : AppCompatActivity() {
 
@@ -32,7 +29,6 @@ class MediaActivity : AppCompatActivity() {
     private var playWhenPrepared = false
     private var playerState = STATE_DEFAULT
     private var previewUrl: String? = null
-    private var previewUrlCall: Call<SearchResponse>? = null
     private val dateFormat by lazy {
         SimpleDateFormat("mm:ss", Locale.getDefault())
     }
@@ -169,7 +165,8 @@ class MediaActivity : AppCompatActivity() {
         val url = previewUrl
 
         if (url.isNullOrEmpty()) {
-            loadPreviewUrl()
+            playWhenPrepared = false
+            updatePlayButton()
             return
         }
 
@@ -240,9 +237,8 @@ class MediaActivity : AppCompatActivity() {
 
     private fun startPlayer() {
         if (previewUrl.isNullOrEmpty()) {
-            playWhenPrepared = true
-            updatePlayButton(isPendingStart = true)
-            loadPreviewUrl()
+            playWhenPrepared = false
+            updatePlayButton()
             return
         }
 
@@ -270,41 +266,6 @@ class MediaActivity : AppCompatActivity() {
         playWhenPrepared = false
         stopTimer()
         updatePlayButton()
-    }
-
-    private fun loadPreviewUrl() {
-        if (previewUrlCall != null) return
-
-        previewUrlCall = RetrofitClient.api.lookup(track.trackId)
-        previewUrlCall?.enqueue(object : Callback<SearchResponse> {
-            override fun onResponse(
-                call: Call<SearchResponse>,
-                response: Response<SearchResponse>
-            ) {
-                previewUrlCall = null
-                if (call.isCanceled) return
-
-                previewUrl = response.body()
-                    ?.results
-                    ?.firstOrNull()
-                    ?.previewUrl
-
-                if (playWhenPrepared && !previewUrl.isNullOrEmpty()) {
-                    preparePlayer()
-                } else if (previewUrl.isNullOrEmpty()) {
-                    playWhenPrepared = false
-                    updatePlayButton()
-                }
-            }
-
-            override fun onFailure(call: Call<SearchResponse>, t: Throwable) {
-                previewUrlCall = null
-                if (call.isCanceled) return
-
-                playWhenPrepared = false
-                updatePlayButton()
-            }
-        })
     }
 
     private fun startTimer() {
@@ -345,8 +306,6 @@ class MediaActivity : AppCompatActivity() {
         super.onDestroy()
 
         stopTimer()
-        previewUrlCall?.cancel()
-
         mediaPlayer?.release()
         mediaPlayer = null
     }
