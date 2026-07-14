@@ -1,4 +1,4 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -7,10 +7,11 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.switchmaterial.SwitchMaterial
 import androidx.core.net.toUri
+import com.example.playlistmaker.Creator
+import com.example.playlistmaker.R
 
 
 class SettingsActivity : AppCompatActivity() {
@@ -77,14 +78,12 @@ class SettingsActivity : AppCompatActivity() {
 
 
 
-        val app = applicationContext as App
-
-
-        switch.isChecked = app.darkTheme
+        val settingsInteractor = Creator.provideSettingsInteractor(this)
+        switch.isChecked = settingsInteractor.isDarkThemeEnabled()
 
 
         switch.setOnCheckedChangeListener { _, isChecked ->
-            app.switchTheme(isChecked)
+            settingsInteractor.setDarkTheme(isChecked)
         }
 
 

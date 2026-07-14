@@ -1,4 +1,4 @@
-package com.example.playlistmaker
+package com.example.playlistmaker.presentation
 
 import android.content.Intent
 import android.os.Bundle
@@ -13,19 +13,19 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
-import android.util.Log
 import android.view.inputmethod.EditorInfo
 import android.os.Handler
 import android.os.Looper
-import com.example.playlistmaker.network.RetrofitClient
-import com.example.playlistmaker.network.SearchResponse
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import androidx.core.widget.doOnTextChanged
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.appbar.MaterialToolbar
+import com.example.playlistmaker.Creator
+import com.example.playlistmaker.R
+import com.example.playlistmaker.domain.api.RequestHandle
+import com.example.playlistmaker.domain.api.SearchHistoryInteractor
+import com.example.playlistmaker.domain.api.SearchTracksInteractor
+import com.example.playlistmaker.domain.models.Track
 
 class SearchActivity : AppCompatActivity() {
 
@@ -45,13 +45,14 @@ class SearchActivity : AppCompatActivity() {
 
     private lateinit var recyclerView: RecyclerView
 
-    private lateinit var history: SearchHistory
+    private lateinit var historyInteractor: SearchHistoryInteractor
+    private lateinit var searchInteractor: SearchTracksInteractor
 
     private lateinit var historyTitle: TextView
     private lateinit var clearHistoryButton: Button
 
     private val handler = Handler(Looper.getMainLooper())
-    private var searchCall: Call<SearchResponse>? = null
+    private var searchRequest: RequestHandle? = null
     private var isClickAllowed = true
     private val searchRunnable = Runnable {
         val query = searchText.trim()
@@ -89,9 +90,8 @@ class SearchActivity : AppCompatActivity() {
         val input = findViewById<EditText>(R.id.search_input)
         val clearButton = findViewById<ImageView>(R.id.clear_button)
 
-        history = SearchHistory(
-            getSharedPreferences("prefs", MODE_PRIVATE)
-        )
+        historyInteractor = Creator.provideSearchHistoryInteractor(this)
+        searchInteractor = Creator.provideSearchTracksInteractor()
 
         recyclerView = findViewById(R.id.recycler_view)
         recyclerView.layoutManager = LinearLayoutManager(this)
@@ -137,7 +137,7 @@ class SearchActivity : AppCompatActivity() {
 
             if (text.isNullOrEmpty()) {
                 handler.removeCallbacks(searchRunnable)
-                searchCall?.cancel()
+                searchRequest?.cancel()
                 hideLoading()
                 recyclerView.visibility = View.GONE
                 hidePlaceholders()
@@ -175,7 +175,7 @@ class SearchActivity : AppCompatActivity() {
         }
 
         clearHistoryButton.setOnClickListener {
-            history.clearHistory()
+            historyInteractor.clearHistory()
             showHistory()
         }
 
@@ -193,7 +193,7 @@ class SearchActivity : AppCompatActivity() {
         if (text.trim().isEmpty()) return
 
         handler.removeCallbacks(searchRunnable)
-        searchCall?.cancel()
+        searchRequest?.cancel()
         showLoading()
         recyclerView.visibility = View.GONE
 
@@ -202,76 +202,19 @@ class SearchActivity : AppCompatActivity() {
         historyTitle.visibility = View.GONE
         clearHistoryButton.visibility = View.GONE
 
-        searchCall = RetrofitClient.api.search(text)
-        searchCall?.enqueue(object : Callback<SearchResponse> {
-
-                override fun onResponse(
-                    call: Call<SearchResponse>,
-                    response: Response<SearchResponse>
-                ) {
-                    if (call.isCanceled) return
-
-                    hideLoading()
-
-                    if (response.code() == 200) {
-
-                        val tracks = response.body()?.results ?: emptyList()
-
-                        if (tracks.isEmpty()) {
-
-                            showEmptyPlaceholder()
-
-                        } else {
-
-                            hidePlaceholders()
-
-                            val mappedTracks = tracks.map {
-
-                                Track(
-                                    trackId = it.trackId ?: 0,
-                                    trackName = it.trackName ?: "Unknown",
-                                    artistName = it.artistName ?: "Unknown",
-                                    trackTimeMillis = it.trackTimeMillis ?: 0L,
-                                    artworkUrl100 = it.artworkUrl100 ?: "",
-
-                                    collectionName = it.collectionName,
-                                    releaseDate = it.releaseDate,
-                                    primaryGenreName = it.primaryGenreName ?: "Unknown",
-                                    country = it.country ?: "Unknown",
-                                    previewUrl = it.previewUrl
-                                )
-
-                            }
-
-
-                            val adapter = TrackAdapter(mappedTracks) { track ->
-
-                                openTrack(track)
-                            }
-
-                            recyclerView.adapter = adapter
-                            recyclerView.visibility = View.VISIBLE
-                        }
-
-                    } else {
-
-                        showErrorPlaceholder()
+        searchRequest = searchInteractor.search(text) { result ->
+            hideLoading()
+            result.fold(
+                onSuccess = { tracks ->
+                    if (tracks.isEmpty()) showEmptyPlaceholder() else {
+                        hidePlaceholders()
+                        recyclerView.adapter = TrackAdapter(tracks, ::openTrack)
+                        recyclerView.visibility = View.VISIBLE
                     }
-                }
-
-                override fun onFailure(
-                    call: Call<SearchResponse>,
-                    t: Throwable
-                ) {
-                    if (call.isCanceled) return
-
-                    hideLoading()
-
-                    showErrorPlaceholder()
-
-                    Log.e("API_ERROR", t.message ?: "Error")
-                }
-            })
+                },
+                onFailure = { showErrorPlaceholder() }
+            )
+        }
     }
 
 
@@ -292,7 +235,7 @@ class SearchActivity : AppCompatActivity() {
     private fun openTrack(track: Track) {
         if (!clickDebounce()) return
 
-        history.addTrack(track)
+        historyInteractor.addTrack(track)
 
         val intent = Intent(this, MediaActivity::class.java)
         intent.putExtra("track", track)
@@ -382,7 +325,7 @@ class SearchActivity : AppCompatActivity() {
     }
 
     private fun showHistory() {
-        val historyList = history.getHistory()
+        val historyList = historyInteractor.getHistory()
 
         if (historyList.isEmpty()) {
             historyTitle.visibility = View.GONE
@@ -407,7 +350,7 @@ class SearchActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         handler.removeCallbacksAndMessages(null)
-        searchCall?.cancel()
+        searchRequest?.cancel()
     }
 
 }
