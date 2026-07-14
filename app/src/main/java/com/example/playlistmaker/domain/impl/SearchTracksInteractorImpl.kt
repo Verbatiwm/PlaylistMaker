@@ -11,6 +11,4 @@ class SearchTracksInteractorImpl(
     override fun search(query: String, consumer: (Result<List<Track>>) -> Unit): RequestHandle =
         repository.search(query.trim(), consumer)
 
-    override fun getTrack(trackId: Long, consumer: (Result<Track?>) -> Unit): RequestHandle =
-        repository.getTrack(trackId, consumer)
 }

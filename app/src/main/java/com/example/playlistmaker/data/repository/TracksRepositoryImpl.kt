@@ -17,12 +17,6 @@ class TracksRepositoryImpl(private val api: ITunesApi) : TracksRepository {
         return RequestHandle { call.cancel() }
     }
 
-    override fun getTrack(trackId: Long, consumer: (Result<Track?>) -> Unit): RequestHandle {
-        val call = api.lookup(trackId)
-        call.enqueue(callback({ response -> response.results.firstOrNull()?.let(::map) }, consumer))
-        return RequestHandle { call.cancel() }
-    }
-
     private fun <T> callback(
         mapper: (SearchResponseDto) -> T,
         consumer: (Result<T>) -> Unit

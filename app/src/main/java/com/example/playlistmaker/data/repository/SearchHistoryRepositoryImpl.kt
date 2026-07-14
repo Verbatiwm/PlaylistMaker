@@ -7,8 +7,10 @@ import com.example.playlistmaker.domain.models.Track
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 
-class SearchHistoryRepositoryImpl(private val prefs: SharedPreferences) : SearchHistoryRepository {
-    private val gson = Gson()
+class SearchHistoryRepositoryImpl(
+    private val prefs: SharedPreferences,
+    private val gson: Gson
+) : SearchHistoryRepository {
 
     override fun getHistory(): List<Track> {
         val json = prefs.getString(KEY, null) ?: return emptyList()

@@ -15,10 +15,7 @@ import android.media.AudioAttributes
 import android.media.MediaPlayer
 import android.os.Handler
 import android.os.Looper
-import com.example.playlistmaker.domain.api.RequestHandle
-import com.example.playlistmaker.domain.api.SearchTracksInteractor
 import com.example.playlistmaker.domain.models.Track
-import com.example.playlistmaker.Creator
 import com.example.playlistmaker.R
 
 class MediaActivity : AppCompatActivity() {
@@ -32,8 +29,6 @@ class MediaActivity : AppCompatActivity() {
     private var playWhenPrepared = false
     private var playerState = STATE_DEFAULT
     private var previewUrl: String? = null
-    private var previewUrlRequest: RequestHandle? = null
-    private lateinit var searchInteractor: SearchTracksInteractor
     private val dateFormat by lazy {
         SimpleDateFormat("mm:ss", Locale.getDefault())
     }
@@ -63,7 +58,6 @@ class MediaActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_media)
-        searchInteractor = Creator.provideSearchTracksInteractor()
 
         val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
         toolbar.setNavigationOnClickListener { finish() }
@@ -171,7 +165,8 @@ class MediaActivity : AppCompatActivity() {
         val url = previewUrl
 
         if (url.isNullOrEmpty()) {
-            loadPreviewUrl()
+            playWhenPrepared = false
+            updatePlayButton()
             return
         }
 
@@ -242,9 +237,8 @@ class MediaActivity : AppCompatActivity() {
 
     private fun startPlayer() {
         if (previewUrl.isNullOrEmpty()) {
-            playWhenPrepared = true
-            updatePlayButton(isPendingStart = true)
-            loadPreviewUrl()
+            playWhenPrepared = false
+            updatePlayButton()
             return
         }
 
@@ -272,20 +266,6 @@ class MediaActivity : AppCompatActivity() {
         playWhenPrepared = false
         stopTimer()
         updatePlayButton()
-    }
-
-    private fun loadPreviewUrl() {
-        if (previewUrlRequest != null) return
-        previewUrlRequest = searchInteractor.getTrack(track.trackId) { result ->
-            previewUrlRequest = null
-            previewUrl = result.getOrNull()?.previewUrl
-            if (playWhenPrepared && !previewUrl.isNullOrEmpty()) {
-                preparePlayer()
-            } else {
-                playWhenPrepared = false
-                updatePlayButton()
-            }
-        }
     }
 
     private fun startTimer() {
@@ -326,8 +306,6 @@ class MediaActivity : AppCompatActivity() {
         super.onDestroy()
 
         stopTimer()
-        previewUrlRequest?.cancel()
-
         mediaPlayer?.release()
         mediaPlayer = null
     }
